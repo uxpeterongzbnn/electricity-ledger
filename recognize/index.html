@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#174d42"><meta name="description" content="上传手写抄表照片或电费结算 PDF，识别并核对数据，保存上网电量、结算金额与售电收入，原件在浏览器处理。"><title>抄表助手 · 照片与结算单识别</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./"><span class="brandmark" aria-hidden="true">电</span><span><strong>抄表助手</strong><small>照片与电费结算单识别</small></span></a>
+    <button hidden id="settingsButton" class="button secondary"><span aria-hidden="true">⚙</span> AI 接口设置 <i id="configDot"></i></button>
+  </header>
+  <main>
+    <div class="intro"><div><p class="eyebrow">ELECTRICITY DATA CAPTURE</p><h1>把纸上的数据，整理成清楚的记录。</h1><p>上传手写抄表照片或电费结算 PDF，识别后对照原件校对。</p></div><div class="steps" aria-label="操作步骤"><span class="active"><b>1</b>上传原件</span><em>—</em><span><b>2</b>识别与校对</span><em>—</em><span><b>3</b>接入台账</span></div></div>
+    <div id="status" class="status" role="status" aria-live="polite">上传照片或 PDF 即可识别，无需安装或配置接口。首次识别需要加载模型，请保持页面打开。</div>
+    <section class="bookmark-install"><div><strong>网页识别，无需本机服务</strong><p>原件在当前浏览器中处理。请校对后下载结果，或从原台账的识别入口进入并传回。</p></div><a class="button primary" href="https://uxpeterongzbnn.github.io/electricity-ledger/" target="_blank" rel="noopener">打开原台账 ↗</a></section>
+    <div class="workspace">
+      <section class="card source-card" aria-labelledby="sourceTitle">
+        <div class="cardhead"><div><span class="sectionnum">01</span><h2 id="sourceTitle">原始文件</h2></div><span id="pageCount" class="count">0 页</span></div>
+        <label id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="选择或拖入照片和 PDF"><span class="uploadicon" aria-hidden="true">↑</span><strong>拖入文件，或点击上传</strong><span>手写抄表照片 · 电费结算单</span><small>JPG / PNG / WebP / PDF · 每个文件 ≤ 20 MB</small><input id="files" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.pdf" multiple hidden></label>
+        <div id="fileList" class="filelist" aria-label="已上传页面"></div>
+        <div id="previewEmpty" class="preview-empty"><svg viewBox="0 0 160 140" width="160" height="140" aria-hidden="true"><rect x="37" y="15" width="86" height="111" rx="8" fill="#f0f3ee" stroke="#d3dcd5"/><path d="M54 43h48M54 58h48M54 73h30M54 97l12-11 12 7 23-22" fill="none" stroke="#b6c6ba" stroke-width="3" stroke-linecap="round"/></svg><p>原件会显示在这里</p><small>文件在当前浏览器预览和识别，识别结果可校对后传回台账。</small></div>
+        <div id="preview" class="preview" hidden><div class="previewbar"><span id="previewName"></span><a id="viewOriginal" target="_blank" rel="noopener">查看大图 ↗</a></div><div class="imageframe"><img id="previewImage" alt="待核对的原始文件页面"></div></div>
+        <div class="source-actions"><button id="recognizeButton" class="button primary" disabled>开始识别 <span aria-hidden="true">→</span></button><button id="cancelButton" class="button secondary" hidden>停止识别</button><button id="clearButton" class="button text" disabled>清空</button></div>
+        <p id="sendTo" class="smallnote">支持 OpenAI 兼容的视觉接口。API Key 仅保留在当前页面内存中。</p>
+      </section>
+      <section class="card results-card" aria-labelledby="resultTitle">
+        <div class="cardhead"><div><span class="sectionnum">02</span><h2 id="resultTitle">识别与校对</h2></div><span id="resultCount" class="count">等待识别</span></div>
+        <div id="resultEmpty" class="result-empty"><span class="checkicon" aria-hidden="true">✓</span><h3>每一个数字，都有原件可核对。</h3><p>识别结果将按两种数据展示：</p><div class="types"><div><b>手写抄表</b><span>企业 · 电表编号 · 累计示数</span></div><div><b>电费结算单</b><span>月份 · 上网电量 · 结算金额</span></div></div><p class="muted">看不清的字段会留空，需要你补齐。</p></div>
+        <div id="results" hidden><p class="reviewnote">请对照左侧原件核对。累计示数与当月电量分别保留；PDF 售电收入不直接替代台账用电电费。</p><div id="resultBody"></div><label class="confirm"><input type="checkbox" id="reviewed">我已对照原件核对本次识别结果</label><div class="result-actions"><button id="downloadButton" class="button secondary" disabled>下载校对结果</button><button id="handoffButton" class="button primary" disabled>传回原网站填入 →</button></div><p id="bridgeStatus" class="smallnote">请核对结果后勾选确认。单独打开本页时，可下载校对结果。</p></div>
+      </section>
+    </div>
+    <section hidden><button id="exportSales"></button><div id="salesList"></div></section>
+    <footer><span>识别只做摘录，最终数据由你核对。</span><a href="https://uxpeterongzbnn.github.io/electricity-ledger/" target="_blank" rel="noopener">打开原电费台账 ↗</a><span>识别引擎：<a href="https://github.com/PaddlePaddle/PaddleOCR/tree/main/paddleocr-js" target="_blank" rel="noopener">PaddleOCR.js</a></span></footer>
+  </main>
+  <dialog id="settingsDialog"><form id="settingsForm"><div class="dialoghead"><div><p class="eyebrow">AI CONNECTION</p><h2>配置已有的 AI 接口</h2></div><button type="button" id="closeSettings" class="iconbutton" aria-label="关闭接口设置">×</button></div><p class="muted">接口需兼容 Chat Completions，并支持图片输入。</p><label class="field">接口基础地址<input id="apiBase" type="url" placeholder="https://你的服务地址/v1" autocomplete="off" required><small>也可填写完整的 /chat/completions 地址。</small></label><label class="field">视觉模型名称<input id="apiModel" placeholder="填写服务商提供的视觉模型 ID" autocomplete="off" required></label><label class="field">API Key<input id="apiKey" type="password" placeholder="在这里输入，无需发到聊天中" autocomplete="off"><small>仅保留在页面内存中，刷新或关闭后清除。</small></label><p class="privacy">识别时，所选页面会发送至你填写的服务地址，费用由该服务按实际调用收取。接口需允许浏览器跨域访问（CORS）。</p><p id="settingsError" class="error" role="alert"></p><button class="button primary" type="submit">应用设置</button></form></dialog>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>
